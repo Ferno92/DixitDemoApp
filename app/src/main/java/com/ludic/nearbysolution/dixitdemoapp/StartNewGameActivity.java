@@ -57,7 +57,7 @@ public class StartNewGameActivity extends AppCompatActivity implements
     private ConnectionLifecycleCallback mConnectionLifecycleCallback = new ConnectionLifecycleCallback() {
         @Override
         public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
-            Log.d("FERNO", "onConnectionInitiated");
+            Log.d("FERNO", "onConnectionInitiated endpointId: " + endpointId);
 
             mResultTextView.setText("CONNECTING..");
             Nearby.Connections.acceptConnection(
@@ -129,9 +129,12 @@ public class StartNewGameActivity extends AppCompatActivity implements
                             public void onResult(@NonNull Connections.StartAdvertisingResult result) {
                                 if (result.getStatus().isSuccess()) {
                                     // We're advertising!
+                                    Log.d("FERNO", "We're advertising!");
                                     mResultTextView.setVisibility(View.VISIBLE);
                                 } else {
                                     // We were unable to start advertising.
+                                    Log.d("FERNO", "We were unable to start advertising.");
+
                                 }
                             }
                         });
@@ -147,6 +150,7 @@ public class StartNewGameActivity extends AppCompatActivity implements
     public void onStop() {
         super.onStop();
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            Nearby.Connections.stopAdvertising(mGoogleApiClient);
             mGoogleApiClient.disconnect();
         }
     }
@@ -174,7 +178,6 @@ public class StartNewGameActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         Log.e("FERNO", "ON DESTROY START NEW GAME ACT");
-        Nearby.Connections.stopAdvertising(mGoogleApiClient);
         super.onDestroy();
     }
 }

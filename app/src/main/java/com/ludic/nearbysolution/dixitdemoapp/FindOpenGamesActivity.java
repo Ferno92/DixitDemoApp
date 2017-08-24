@@ -58,7 +58,7 @@ public class FindOpenGamesActivity extends AppCompatActivity implements
     private ConnectionLifecycleCallback mConnectionLifecycleCallback = new ConnectionLifecycleCallback() {
         @Override
         public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
-            Log.d("FERNO", "onConnectionInitiated");
+            Log.d("FERNO", "onConnectionInitiated endpointId: " + endpointId);
 
             mResultTextView.setText("CONNECTING..");
             Nearby.Connections.acceptConnection(
@@ -127,6 +127,7 @@ public class FindOpenGamesActivity extends AppCompatActivity implements
     public void onStop() {
         super.onStop();
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            Nearby.Connections.stopDiscovery(mGoogleApiClient);
             mGoogleApiClient.disconnect();
         }
     }
@@ -155,6 +156,7 @@ public class FindOpenGamesActivity extends AppCompatActivity implements
                                                 mResultTextView.setVisibility(View.VISIBLE);
                                                 mResultTextView.setText("ASKING..");
                                             } else {
+                                                Log.d("FERNO", "Nearby Connections failed to request the connection");
                                                 // Nearby Connections failed to request the connection.
                                             }
                                         }
@@ -165,6 +167,7 @@ public class FindOpenGamesActivity extends AppCompatActivity implements
                 @Override
                 public void onEndpointLost(String endpointId) {
                     // A previously discovered endpoint has gone away.
+                    Log.d("FERNO", "A previously discovered endpoint has gone away.");
                 }
             };
 
@@ -180,8 +183,10 @@ public class FindOpenGamesActivity extends AppCompatActivity implements
                             public void onResult(@NonNull Status status) {
                                 if (status.isSuccess()) {
                                     // We're discovering!
+                                    Log.d("FERNO", "We're discovering!");
                                     mResultTextView.setVisibility(View.VISIBLE);
                                 } else {
+                                    Log.d("FERNO", "We were unable to start discovering.");
                                     // We were unable to start discovering.
                                 }
                             }
@@ -210,7 +215,6 @@ public class FindOpenGamesActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         Log.e("FERNO", "ON DESTROY DISCOVERY");
-        Nearby.Connections.stopDiscovery(mGoogleApiClient);
         super.onDestroy();
     }
 }
