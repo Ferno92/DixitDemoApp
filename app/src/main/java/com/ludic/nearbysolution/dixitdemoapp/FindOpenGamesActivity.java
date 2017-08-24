@@ -33,6 +33,8 @@ import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 import com.google.android.gms.nearby.connection.Strategy;
 
+import java.util.Random;
+
 /**
  * Created by luca.fernandez on 24/08/2017.
  */
@@ -140,7 +142,7 @@ public class FindOpenGamesActivity extends AppCompatActivity implements
                     // An endpoint was found!
                     mResultTextView.setVisibility(View.VISIBLE);
                     mResultTextView.setText("FOUND");
-                    String name = "PIPPO";
+                    String name = "PIPPO" + random();
                     Nearby.Connections.requestConnection(
                             mGoogleApiClient,
                             name,
@@ -216,5 +218,17 @@ public class FindOpenGamesActivity extends AppCompatActivity implements
     protected void onDestroy() {
         Log.e("FERNO", "ON DESTROY DISCOVERY");
         super.onDestroy();
+    }
+
+    public static String random() {
+        Random generator = new Random();
+        StringBuilder randomStringBuilder = new StringBuilder();
+        int randomLength = generator.nextInt(10);
+        char tempChar;
+        for (int i = 0; i < randomLength; i++){
+            tempChar = (char) (generator.nextInt(96) + 32);
+            randomStringBuilder.append(tempChar);
+        }
+        return randomStringBuilder.toString();
     }
 }
