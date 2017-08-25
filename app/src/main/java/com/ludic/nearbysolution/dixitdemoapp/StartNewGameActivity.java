@@ -1,6 +1,5 @@
 package com.ludic.nearbysolution.dixitdemoapp;
 
-import android.*;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -8,16 +7,19 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
@@ -30,11 +32,18 @@ import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 import com.google.android.gms.nearby.connection.Strategy;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USERNAME;
+import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USER_DATA;
+
 /**
  * Created by luca.fernandez on 24/08/2017.
  */
 
-public class StartNewGameActivity extends AppCompatActivity implements
+public class StartNewGameActivity extends BaseActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
@@ -42,6 +51,18 @@ public class StartNewGameActivity extends AppCompatActivity implements
     private GoogleApiClient mGoogleApiClient;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private TextView mResultTextView;
+    private ListView mDiscovererListView;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    //LIST OF ARRAY STRINGS WHICH WILL SERVE AS LIST ITEMS
+    List<HashMap<String, String>> listItems = new ArrayList<HashMap<String, String>>();
+
+    // Create the item mapping
+    String[] from = new String[]{"id", "name"};
+    int[] to = new int[]{R.id.endpoint_id, R.id.endpoint_name};
+
+    //DEFINING A STRING ADAPTER WHICH WILL HANDLE THE DATA OF THE LISTVIEW
+    private SimpleAdapter adapter;
+
 
     private PayloadCallback mPayloadCallback = new PayloadCallback() {
         @Override
@@ -60,8 +81,17 @@ public class StartNewGameActivity extends AppCompatActivity implements
             Log.d("FERNO", "onConnectionInitiated endpointId: " + endpointId);
 
             mResultTextView.setText("CONNECTING..");
-            Nearby.Connections.acceptConnection(
-                    mGoogleApiClient, endpointId, mPayloadCallback);
+
+            HashMap<String, String> map = new HashMap<String, String>();
+            map.put("id", endpointId);
+            map.put("name", connectionInfo.getEndpointName());
+
+            listItems.add(map);
+            adapter.notifyDataSetChanged();
+
+//
+//            Nearby.Connections.acceptConnection(
+//                    mGoogleApiClient, endpointId, mPayloadCallback);
 
         }
 
@@ -92,12 +122,14 @@ public class StartNewGameActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.start_new_game_activity);
         mResultTextView = (TextView) findViewById(R.id.result_text);
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Nearby.CONNECTIONS_API)
-                .build();
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(Nearby.CONNECTIONS_API)
+                    .setAccountName(getSharedPreferences(USER_DATA, 0).getString(USERNAME, ""))
+                    .build();
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Android M Permission check 
             if (this.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -114,6 +146,36 @@ public class StartNewGameActivity extends AppCompatActivity implements
                 builder.show();
             }
         }
+        adapter = new SimpleAdapter(this, listItems, R.layout.device_list_item, from, to);
+        mDiscovererListView = (ListView) findViewById(R.id.endpoint_list);
+        mDiscovererListView.setAdapter(adapter);
+        mDiscovererListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                HashMap map = listItems.get(position);
+                String endpointId = map.get("id").toString();
+
+
+                Nearby.Connections.acceptConnection(
+                        mGoogleApiClient, endpointId, mPayloadCallback);
+
+            }
+        });
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                if (mGoogleApiClient.isConnected()) {
+                    mGoogleApiClient.disconnect();
+                    mGoogleApiClient.connect();
+                } else {
+                    mGoogleApiClient.connect();
+                }
+
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
     }
 
     private void startAdvertising() {
@@ -159,6 +221,9 @@ public class StartNewGameActivity extends AppCompatActivity implements
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.d("FERNO", "onConnected");
+        ConnectionResult result = mGoogleApiClient.getConnectionResult(Nearby.CONNECTIONS_API);
+        String error = result.getErrorMessage();
+        Log.d("FERNO", "error: " + error);
 
         startAdvertising();
     }

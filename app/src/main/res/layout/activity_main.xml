@@ -5,6 +5,17 @@
     tools:context="com.ludic.nearbysolution.dixitdemoapp.MainActivity"
     >
 
+    <ImageView
+        android:id="@+id/user_data"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:src="@drawable/user_data_image"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="20dp"
+        />
+
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
          TextureView, etc. -->

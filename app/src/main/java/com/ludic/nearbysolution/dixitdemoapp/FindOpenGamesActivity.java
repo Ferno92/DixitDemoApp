@@ -9,10 +9,15 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -33,19 +38,37 @@ import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 import com.google.android.gms.nearby.connection.Strategy;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
+
+import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USERNAME;
+import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USER_DATA;
 
 /**
  * Created by luca.fernandez on 24/08/2017.
  */
 
-public class FindOpenGamesActivity extends AppCompatActivity implements
+public class FindOpenGamesActivity extends BaseActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
     private GoogleApiClient mGoogleApiClient;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private TextView mResultTextView;
+    private ListView mEndpointListView;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    //LIST OF ARRAY STRINGS WHICH WILL SERVE AS LIST ITEMS
+    List<HashMap<String, String>> listItems = new ArrayList<HashMap<String, String>>();
+
+    // Create the item mapping
+    String[] from = new String[] { "id", "name" };
+    int[] to = new int[] { R.id.endpoint_id, R.id.endpoint_name };
+
+    //DEFINING A STRING ADAPTER WHICH WILL HANDLE THE DATA OF THE LISTVIEW
+    private SimpleAdapter adapter;
+
     private PayloadCallback mPayloadCallback = new PayloadCallback() {
         @Override
         public void onPayloadReceived(String s, Payload payload) {
@@ -95,11 +118,13 @@ public class FindOpenGamesActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.start_new_game_activity);
         mResultTextView = (TextView) findViewById(R.id.result_text);
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Nearby.CONNECTIONS_API)
-                .build();
+        if(mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(Nearby.CONNECTIONS_API)
+                    .build();
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Android M Permission check 
             if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -117,6 +142,52 @@ public class FindOpenGamesActivity extends AppCompatActivity implements
                 builder.show();
             }
         }
+        adapter = new SimpleAdapter(this, listItems, R.layout.device_list_item, from, to);
+        mEndpointListView = (ListView) findViewById(R.id.endpoint_list);
+        mEndpointListView.setAdapter(adapter);
+        mEndpointListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                HashMap map = listItems.get(position);
+                String endpointId = map.get("id").toString();
+
+                String name = getSharedPreferences(USER_DATA, 0).getString(USERNAME, "NO-NAME");
+                Nearby.Connections.requestConnection(
+                        mGoogleApiClient,
+                        name,
+                        endpointId,
+                        mConnectionLifecycleCallback)
+                        .setResultCallback(
+                                new ResultCallback<Status>() {
+                                    @Override
+                                    public void onResult(@NonNull Status status) {
+                                        if (status.isSuccess()) {
+                                            // We successfully requested a connection. Now both sides
+                                            // must accept before the connection is established.
+                                            mResultTextView.setVisibility(View.VISIBLE);
+                                            mResultTextView.setText("ASKING..");
+                                        } else {
+                                            Log.d("FERNO", "Nearby Connections failed to request the connection");
+                                            // Nearby Connections failed to request the connection.
+                                        }
+                                    }
+                                });
+            }
+        });
+        mSwipeRefreshLayout = (SwipeRefreshLayout)findViewById(R.id.swiperefresh);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                if(mGoogleApiClient.isConnected()) {
+                    mGoogleApiClient.disconnect();
+                    mGoogleApiClient.connect();
+                }else{
+                    mGoogleApiClient.connect();
+                }
+
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
     }
 
     @Override
@@ -142,27 +213,37 @@ public class FindOpenGamesActivity extends AppCompatActivity implements
                     // An endpoint was found!
                     mResultTextView.setVisibility(View.VISIBLE);
                     mResultTextView.setText("FOUND");
-                    String name = "PIPPO" + random();
-                    Nearby.Connections.requestConnection(
-                            mGoogleApiClient,
-                            name,
-                            endpointId,
-                            mConnectionLifecycleCallback)
-                            .setResultCallback(
-                                    new ResultCallback<Status>() {
-                                        @Override
-                                        public void onResult(@NonNull Status status) {
-                                            if (status.isSuccess()) {
-                                                // We successfully requested a connection. Now both sides
-                                                // must accept before the connection is established.
-                                                mResultTextView.setVisibility(View.VISIBLE);
-                                                mResultTextView.setText("ASKING..");
-                                            } else {
-                                                Log.d("FERNO", "Nearby Connections failed to request the connection");
-                                                // Nearby Connections failed to request the connection.
-                                            }
-                                        }
-                                    });
+//                    String name = getSharedPreferences(USER_DATA, 0).getString(USERNAME, "NO-NAME");
+                    String endpointName = discoveredEndpointInfo.getEndpointName();
+
+//                    listItems.add("Endpoint: " + endpointName + " Click to connect");
+                    HashMap<String, String> map = new HashMap<String, String>();
+                    map.put("id", endpointId);
+                    map.put("name", endpointName);
+                    listItems.add(map);
+                    adapter.notifyDataSetChanged();
+
+//
+//                    Nearby.Connections.requestConnection(
+//                            mGoogleApiClient,
+//                            name,
+//                            endpointId,
+//                            mConnectionLifecycleCallback)
+//                            .setResultCallback(
+//                                    new ResultCallback<Status>() {
+//                                        @Override
+//                                        public void onResult(@NonNull Status status) {
+//                                            if (status.isSuccess()) {
+//                                                // We successfully requested a connection. Now both sides
+//                                                // must accept before the connection is established.
+//                                                mResultTextView.setVisibility(View.VISIBLE);
+//                                                mResultTextView.setText("ASKING..");
+//                                            } else {
+//                                                Log.d("FERNO", "Nearby Connections failed to request the connection");
+//                                                // Nearby Connections failed to request the connection.
+//                                            }
+//                                        }
+//                                    });
 
                 }
 
