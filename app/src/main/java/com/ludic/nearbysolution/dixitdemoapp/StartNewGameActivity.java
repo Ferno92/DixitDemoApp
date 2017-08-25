@@ -1,6 +1,7 @@
 package com.ludic.nearbysolution.dixitdemoapp;
 
 import android.content.DialogInterface;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,7 +20,6 @@ import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
@@ -52,16 +52,19 @@ public class StartNewGameActivity extends BaseActivity implements
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private TextView mResultTextView;
     private ListView mDiscovererListView;
+    private ListView mPlayersListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     //LIST OF ARRAY STRINGS WHICH WILL SERVE AS LIST ITEMS
-    List<HashMap<String, String>> listItems = new ArrayList<HashMap<String, String>>();
+    List<HashMap<String, String>> discovererListItems = new ArrayList<HashMap<String, String>>();
+    List<HashMap<String, String>> playersListItems = new ArrayList<HashMap<String, String>>();
 
     // Create the item mapping
     String[] from = new String[]{"id", "name"};
     int[] to = new int[]{R.id.endpoint_id, R.id.endpoint_name};
 
     //DEFINING A STRING ADAPTER WHICH WILL HANDLE THE DATA OF THE LISTVIEW
-    private SimpleAdapter adapter;
+    private SimpleAdapter discovererAdapter;
+    private SimpleAdapter playersAdapter;
 
 
     private PayloadCallback mPayloadCallback = new PayloadCallback() {
@@ -77,17 +80,17 @@ public class StartNewGameActivity extends BaseActivity implements
     };
     private ConnectionLifecycleCallback mConnectionLifecycleCallback = new ConnectionLifecycleCallback() {
         @Override
-        public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
-            Log.d("FERNO", "onConnectionInitiated endpointId: " + endpointId);
+        public void onConnectionInitiated(String discovererId, ConnectionInfo connectionInfo) {
+            Log.d("FERNO", "onConnectionInitiated discovererId: " + discovererId);
 
             mResultTextView.setText("CONNECTING..");
 
             HashMap<String, String> map = new HashMap<String, String>();
-            map.put("id", endpointId);
+            map.put("id", discovererId);
             map.put("name", connectionInfo.getEndpointName());
 
-            listItems.add(map);
-            adapter.notifyDataSetChanged();
+            discovererListItems.add(map);
+            discovererAdapter.notifyDataSetChanged();
 
 //
 //            Nearby.Connections.acceptConnection(
@@ -96,12 +99,25 @@ public class StartNewGameActivity extends BaseActivity implements
         }
 
         @Override
-        public void onConnectionResult(String endpointId, ConnectionResolution result) {
+        public void onConnectionResult(String discovererId, ConnectionResolution result) {
             Log.d("FERNO", "onConnectionResult");
             switch (result.getStatus().getStatusCode()) {
                 case ConnectionsStatusCodes.STATUS_OK:
                     // We're connected! Can now start sending and receiving data.
+                    HashMap row = null;
                     mResultTextView.setText("CONNECTED!!!");
+                    for(int i = 0; i < discovererListItems.size(); i++){
+                        row = discovererListItems.get(i);
+                        if(row.get("id") == discovererId){
+                           break;
+                        }
+                    }
+                    if(row != null){
+                        playersListItems.add(row);
+                        playersAdapter.notifyDataSetChanged();
+                        discovererListItems.remove(row);
+                        discovererAdapter.notifyDataSetChanged();
+                    }
                     break;
                 case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
                     // The connection was rejected by one or both sides.
@@ -120,7 +136,10 @@ public class StartNewGameActivity extends BaseActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.start_new_game_activity);
+        setContentView(R.layout.game_instance_activity);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        TextView hubName = (TextView)findViewById(R.id.hub_name);
+        hubName.setText(hubName.getText().toString() + getSharedPreferences(USER_DATA, 0).getString(USERNAME, "") + " - ");// + id
         mResultTextView = (TextView) findViewById(R.id.result_text);
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -146,23 +165,24 @@ public class StartNewGameActivity extends BaseActivity implements
                 builder.show();
             }
         }
-        adapter = new SimpleAdapter(this, listItems, R.layout.device_list_item, from, to);
-        mDiscovererListView = (ListView) findViewById(R.id.endpoint_list);
-        mDiscovererListView.setAdapter(adapter);
+        discovererAdapter = new SimpleAdapter(this, discovererListItems, R.layout.device_list_item, from, to);
+
+        mDiscovererListView = (ListView) findViewById(R.id.discoverer_list);
+        mDiscovererListView.setAdapter(discovererAdapter);
         mDiscovererListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                HashMap map = listItems.get(position);
-                String endpointId = map.get("id").toString();
+                HashMap map = discovererListItems.get(position);
+                String discovererId = map.get("id").toString();
 
 
                 Nearby.Connections.acceptConnection(
-                        mGoogleApiClient, endpointId, mPayloadCallback);
+                        mGoogleApiClient, discovererId, mPayloadCallback);
 
             }
         });
 
-        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh_discoverer);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -176,12 +196,19 @@ public class StartNewGameActivity extends BaseActivity implements
                 mSwipeRefreshLayout.setRefreshing(false);
             }
         });
+
+        //players
+
+        playersAdapter = new SimpleAdapter(this, playersListItems, R.layout.device_list_item, from, to);
+
+        mPlayersListView = (ListView) findViewById(R.id.players_list);
+        mPlayersListView.setAdapter(playersAdapter);
     }
 
     private void startAdvertising() {
         Nearby.Connections.startAdvertising(
                 mGoogleApiClient,
-                "SUPER_HUB", //getUserNickname(),
+                getSharedPreferences(USER_DATA, 0).getString(USERNAME, ""), //getUserNickname(),
                 "com.ludic.nearbysolution.dixitdemoapp",//SERVICE_ID,
                 mConnectionLifecycleCallback,
                 new AdvertisingOptions(Strategy.P2P_STAR))

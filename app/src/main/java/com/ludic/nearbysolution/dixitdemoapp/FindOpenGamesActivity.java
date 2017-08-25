@@ -1,6 +1,5 @@
 package com.ludic.nearbysolution.dixitdemoapp;
 
-import android.*;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
@@ -11,11 +10,9 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -28,7 +25,6 @@ import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
-import com.google.android.gms.nearby.connection.Connections;
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes;
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo;
 import com.google.android.gms.nearby.connection.DiscoveryOptions;
@@ -116,7 +112,7 @@ public class FindOpenGamesActivity extends BaseActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.start_new_game_activity);
+        setContentView(R.layout.find_games_activity);
         mResultTextView = (TextView) findViewById(R.id.result_text);
         if(mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -216,7 +212,7 @@ public class FindOpenGamesActivity extends BaseActivity implements
 //                    String name = getSharedPreferences(USER_DATA, 0).getString(USERNAME, "NO-NAME");
                     String endpointName = discoveredEndpointInfo.getEndpointName();
 
-//                    listItems.add("Endpoint: " + endpointName + " Click to connect");
+//                    discovererListItems.add("Endpoint: " + endpointName + " Click to connect");
                     HashMap<String, String> map = new HashMap<String, String>();
                     map.put("id", endpointId);
                     map.put("name", endpointName);
