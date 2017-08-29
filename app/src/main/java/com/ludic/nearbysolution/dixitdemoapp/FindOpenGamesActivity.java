@@ -2,9 +2,11 @@ package com.ludic.nearbysolution.dixitdemoapp;
 
 import android.Manifest;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -47,10 +49,8 @@ import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USER_DAT
  */
 
 public class FindOpenGamesActivity extends BaseActivity implements
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+        DixitApplication.DixitAppListener{
 
-    private GoogleApiClient mGoogleApiClient;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private TextView mResultTextView;
     private ListView mEndpointListView;
@@ -76,14 +76,13 @@ public class FindOpenGamesActivity extends BaseActivity implements
 
         }
     };
-    private ConnectionLifecycleCallback mConnectionLifecycleCallback = new ConnectionLifecycleCallback() {
         @Override
         public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
             Log.d("FERNO", "onConnectionInitiated endpointId: " + endpointId);
 
             mResultTextView.setText("CONNECTING..");
             Nearby.Connections.acceptConnection(
-                    mGoogleApiClient, endpointId, mPayloadCallback);
+                    DixitApplication.getGoogleApiClient(), endpointId, mPayloadCallback);
 
         }
 
@@ -94,11 +93,21 @@ public class FindOpenGamesActivity extends BaseActivity implements
                 case ConnectionsStatusCodes.STATUS_OK:
                     // We're connected! Can now start sending and receiving data.
                     mResultTextView.setText("CONNECTED!!!");
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            Intent i = new Intent(FindOpenGamesActivity.this, PlayersActivity.class);
+                            startActivity(i);
+                            finish();
+                        }
+                    }, 1000);
                     break;
                 case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
                     // The connection was rejected by one or both sides.
                     mResultTextView.setText("REJECTED!!!");
                     break;
+                default:
+                    mResultTextView.setText("WHAT? CODE: " + result.getStatus().getStatusCode());
             }
         }
 
@@ -107,19 +116,14 @@ public class FindOpenGamesActivity extends BaseActivity implements
             Log.d("FERNO", "onDisconnected");
 
         }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.find_games_activity);
         mResultTextView = (TextView) findViewById(R.id.result_text);
-        if(mGoogleApiClient == null) {
-            mGoogleApiClient = new GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(Nearby.CONNECTIONS_API)
-                    .build();
+        if(DixitApplication.getGoogleApiClient() == null) {
+            DixitApplication.initGoogleApiClient();
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Android M Permission check 
@@ -149,10 +153,10 @@ public class FindOpenGamesActivity extends BaseActivity implements
 
                 String name = getSharedPreferences(USER_DATA, 0).getString(USERNAME, "NO-NAME");
                 Nearby.Connections.requestConnection(
-                        mGoogleApiClient,
+                        DixitApplication.getGoogleApiClient(),
                         name,
                         endpointId,
-                        mConnectionLifecycleCallback)
+                        DixitApplication.getConnectionLifecycleCallback())
                         .setResultCallback(
                                 new ResultCallback<Status>() {
                                     @Override
@@ -163,8 +167,9 @@ public class FindOpenGamesActivity extends BaseActivity implements
                                             mResultTextView.setVisibility(View.VISIBLE);
                                             mResultTextView.setText("ASKING..");
                                         } else {
-                                            Log.d("FERNO", "Nearby Connections failed to request the connection");
-                                            // Nearby Connections failed to request the connection.
+                                            Log.d("FERNO", "Nearby Connections failed to request the connection, status: " + status.getStatusCode());
+                                            mResultTextView.setText("ERROR: " + status.getStatusCode());
+                                            // Nearby Connections failed to request the connection. repeat?
                                         }
                                     }
                                 });
@@ -174,31 +179,24 @@ public class FindOpenGamesActivity extends BaseActivity implements
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if(mGoogleApiClient.isConnected()) {
-                    mGoogleApiClient.disconnect();
-                    mGoogleApiClient.connect();
-                }else{
-                    mGoogleApiClient.connect();
-                }
+                DixitApplication.initGoogleApiClient();
 
                 mSwipeRefreshLayout.setRefreshing(false);
             }
         });
+
+        DixitApplication.setDixitListener(this);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        mGoogleApiClient.connect();
+        DixitApplication.getGoogleApiClient().connect();
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-            Nearby.Connections.stopDiscovery(mGoogleApiClient);
-            mGoogleApiClient.disconnect();
-        }
     }
 
     private final EndpointDiscoveryCallback mEndpointDiscoveryCallback =
@@ -218,29 +216,6 @@ public class FindOpenGamesActivity extends BaseActivity implements
                     map.put("name", endpointName);
                     listItems.add(map);
                     adapter.notifyDataSetChanged();
-
-//
-//                    Nearby.Connections.requestConnection(
-//                            mGoogleApiClient,
-//                            name,
-//                            endpointId,
-//                            mConnectionLifecycleCallback)
-//                            .setResultCallback(
-//                                    new ResultCallback<Status>() {
-//                                        @Override
-//                                        public void onResult(@NonNull Status status) {
-//                                            if (status.isSuccess()) {
-//                                                // We successfully requested a connection. Now both sides
-//                                                // must accept before the connection is established.
-//                                                mResultTextView.setVisibility(View.VISIBLE);
-//                                                mResultTextView.setText("ASKING..");
-//                                            } else {
-//                                                Log.d("FERNO", "Nearby Connections failed to request the connection");
-//                                                // Nearby Connections failed to request the connection.
-//                                            }
-//                                        }
-//                                    });
-
                 }
 
                 @Override
@@ -252,7 +227,7 @@ public class FindOpenGamesActivity extends BaseActivity implements
 
     private void startDiscovery() {
         Nearby.Connections.startDiscovery(
-                mGoogleApiClient,
+                DixitApplication.getGoogleApiClient(),
                 "com.ludic.nearbysolution.dixitdemoapp",
                 mEndpointDiscoveryCallback,
                 new DiscoveryOptions(Strategy.P2P_STAR))

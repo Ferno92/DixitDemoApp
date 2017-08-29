@@ -73,4 +73,13 @@
         android:visibility="gone"
         tools:text="OK"
         tools:visibility="visible"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="10dp"
+        android:text="Start game"
+        style="@style/text_25_roboto_regular"/>
 </RelativeLayout>

@@ -43,12 +43,8 @@ import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USER_DAT
  * Created by luca.fernandez on 24/08/2017.
  */
 
-public class StartNewGameActivity extends BaseActivity implements
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+public class StartNewGameActivity extends BaseActivity implements DixitApplication.DixitAppListener {
 
-
-    private GoogleApiClient mGoogleApiClient;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private TextView mResultTextView;
     private ListView mDiscovererListView;
@@ -78,7 +74,7 @@ public class StartNewGameActivity extends BaseActivity implements
 
         }
     };
-    private ConnectionLifecycleCallback mConnectionLifecycleCallback = new ConnectionLifecycleCallback() {
+
         @Override
         public void onConnectionInitiated(String discovererId, ConnectionInfo connectionInfo) {
             Log.d("FERNO", "onConnectionInitiated discovererId: " + discovererId);
@@ -131,7 +127,6 @@ public class StartNewGameActivity extends BaseActivity implements
             Log.d("FERNO", "onDisconnected");
 
         }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -141,13 +136,8 @@ public class StartNewGameActivity extends BaseActivity implements
         TextView hubName = (TextView)findViewById(R.id.hub_name);
         hubName.setText(hubName.getText().toString() + getSharedPreferences(USER_DATA, 0).getString(USERNAME, "") + " - ");// + id
         mResultTextView = (TextView) findViewById(R.id.result_text);
-        if (mGoogleApiClient == null) {
-            mGoogleApiClient = new GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(Nearby.CONNECTIONS_API)
-                    .setAccountName(getSharedPreferences(USER_DATA, 0).getString(USERNAME, ""))
-                    .build();
+        if (DixitApplication.getGoogleApiClient() == null) {
+            DixitApplication.initGoogleApiClient();
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Android M Permission check 
@@ -177,7 +167,7 @@ public class StartNewGameActivity extends BaseActivity implements
 
 
                 Nearby.Connections.acceptConnection(
-                        mGoogleApiClient, discovererId, mPayloadCallback);
+                        DixitApplication.getGoogleApiClient(), discovererId, mPayloadCallback);
 
             }
         });
@@ -186,13 +176,22 @@ public class StartNewGameActivity extends BaseActivity implements
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if (mGoogleApiClient.isConnected()) {
-                    mGoogleApiClient.disconnect();
-                    mGoogleApiClient.connect();
+                if (DixitApplication.getGoogleApiClient().isConnected()) {
+                    DixitApplication.getGoogleApiClient().disconnect();
+                    DixitApplication.getGoogleApiClient().connect();
                 } else {
-                    mGoogleApiClient.connect();
+                    DixitApplication.getGoogleApiClient().connect();
                 }
 
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
+        SwipeRefreshLayout swiperefreshPlayer = (SwipeRefreshLayout)findViewById(R.id.swiperefresh_player);
+        swiperefreshPlayer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                //TODO: refresh users logged in
                 mSwipeRefreshLayout.setRefreshing(false);
             }
         });
@@ -203,14 +202,41 @@ public class StartNewGameActivity extends BaseActivity implements
 
         mPlayersListView = (ListView) findViewById(R.id.players_list);
         mPlayersListView.setAdapter(playersAdapter);
+
+        DixitApplication.setDixitListener(this);
+    }
+
+
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        DixitApplication.getGoogleApiClient().connect();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+    }
+
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d("FERNO", "onConnected");
+        ConnectionResult result = DixitApplication.getGoogleApiClient().getConnectionResult(Nearby.CONNECTIONS_API);
+        String error = result.getErrorMessage();
+        Log.d("FERNO", "error: " + error);
+
+        startAdvertising();
     }
 
     private void startAdvertising() {
         Nearby.Connections.startAdvertising(
-                mGoogleApiClient,
+                DixitApplication.getGoogleApiClient(),
                 getSharedPreferences(USER_DATA, 0).getString(USERNAME, ""), //getUserNickname(),
                 "com.ludic.nearbysolution.dixitdemoapp",//SERVICE_ID,
-                mConnectionLifecycleCallback,
+                DixitApplication.getConnectionLifecycleCallback(),
                 new AdvertisingOptions(Strategy.P2P_STAR))
                 .setResultCallback(
                         new ResultCallback<Connections.StartAdvertisingResult>() {
@@ -229,31 +255,6 @@ public class StartNewGameActivity extends BaseActivity implements
                         });
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-            Nearby.Connections.stopAdvertising(mGoogleApiClient);
-            mGoogleApiClient.disconnect();
-        }
-    }
-
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.d("FERNO", "onConnected");
-        ConnectionResult result = mGoogleApiClient.getConnectionResult(Nearby.CONNECTIONS_API);
-        String error = result.getErrorMessage();
-        Log.d("FERNO", "error: " + error);
-
-        startAdvertising();
-    }
 
     @Override
     public void onConnectionSuspended(int i) {

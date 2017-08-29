@@ -118,6 +118,8 @@ public class MainActivity extends BaseActivity {
             }
         });
 
+        DixitApplication.initGoogleApiClient();
+
 //        mControlsView = findViewById(R.id.fullscreen_content_controls);
 //        mContentView = findViewById(R.id.fullscreen_content);
 
