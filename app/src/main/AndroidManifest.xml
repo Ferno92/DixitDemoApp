@@ -42,6 +42,9 @@
         <activity android:name=".PlayersActivity"
             android:label="Players Page"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"></activity>
+        <activity android:name=".GameInstanceActivity"
+            android:label="Game instance"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"></activity>
 
 
         <meta-data

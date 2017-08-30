@@ -1,85 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
+    android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <TextView
-        android:id="@+id/hub_name"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="50dp"
-        android:text="HUB: "
-        android:gravity="center"/>
-
-    <LinearLayout
-        android:id="@+id/titles"
-        android:layout_below="@+id/hub_name"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Discovered players"
-            android:textSize="20sp"
-            android:gravity="center"/>
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Players in game"
-            android:textSize="20sp"
-            android:gravity="center"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_below="@+id/titles"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal">
-
-        <android.support.v4.widget.SwipeRefreshLayout
-            android:id="@+id/swiperefresh_discoverer"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
-
-            <ListView
-                android:id="@+id/discoverer_list"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"></ListView>
-        </android.support.v4.widget.SwipeRefreshLayout>
-
-        <android.support.v4.widget.SwipeRefreshLayout
-            android:id="@+id/swiperefresh_player"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
-
-            <ListView
-                android:id="@+id/players_list"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"></ListView>
-        </android.support.v4.widget.SwipeRefreshLayout>
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/result_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:layout_alignParentBottom="true"
-        android:text="OK"
-        android:visibility="gone"
-        tools:text="OK"
-        tools:visibility="visible"/>
 
     <Button
+        android:id="@+id/send_payload"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_margin="10dp"
-        android:text="Start game"
-        style="@style/text_25_roboto_regular"/>
+        android:layout_centerInParent="true"
+        android:text="Send payload"/>
+
 </RelativeLayout>

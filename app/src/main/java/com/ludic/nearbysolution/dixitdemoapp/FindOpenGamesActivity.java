@@ -49,7 +49,7 @@ import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USER_DAT
  */
 
 public class FindOpenGamesActivity extends BaseActivity implements
-        DixitApplication.DixitAppListener{
+        DixitApplication.DixitAppListener {
 
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private TextView mResultTextView;
@@ -59,70 +59,60 @@ public class FindOpenGamesActivity extends BaseActivity implements
     List<HashMap<String, String>> listItems = new ArrayList<HashMap<String, String>>();
 
     // Create the item mapping
-    String[] from = new String[] { "id", "name" };
-    int[] to = new int[] { R.id.endpoint_id, R.id.endpoint_name };
+    String[] from = new String[]{"id", "name"};
+    int[] to = new int[]{R.id.endpoint_id, R.id.endpoint_name};
 
     //DEFINING A STRING ADAPTER WHICH WILL HANDLE THE DATA OF THE LISTVIEW
     private SimpleAdapter adapter;
 
-    private PayloadCallback mPayloadCallback = new PayloadCallback() {
-        @Override
-        public void onPayloadReceived(String s, Payload payload) {
 
+    @Override
+    public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
+        Log.d("FERNO", "onConnectionInitiated endpointId: " + endpointId);
+
+        mResultTextView.setText("CONNECTING..");
+        Nearby.Connections.acceptConnection(
+                DixitApplication.getGoogleApiClient(), endpointId, DixitApplication.getPayloadCallback());
+
+    }
+
+    @Override
+    public void onConnectionResult(String endpointId, ConnectionResolution result) {
+        Log.d("FERNO", "onConnectionResult");
+        switch (result.getStatus().getStatusCode()) {
+            case ConnectionsStatusCodes.STATUS_OK:
+                // We're connected! Can now start sending and receiving data.
+                mResultTextView.setText("CONNECTED!!!");
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Intent i = new Intent(FindOpenGamesActivity.this, PlayersActivity.class);
+                        startActivity(i);
+                        finish();
+                    }
+                }, 1000);
+                break;
+            case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
+                // The connection was rejected by one or both sides.
+                mResultTextView.setText("REJECTED!!!");
+                break;
+            default:
+                mResultTextView.setText("WHAT? CODE: " + result.getStatus().getStatusCode());
         }
+    }
 
-        @Override
-        public void onPayloadTransferUpdate(String s, PayloadTransferUpdate payloadTransferUpdate) {
+    @Override
+    public void onDisconnected(String s) {
+        Log.d("FERNO", "onDisconnected");
 
-        }
-    };
-        @Override
-        public void onConnectionInitiated(String endpointId, ConnectionInfo connectionInfo) {
-            Log.d("FERNO", "onConnectionInitiated endpointId: " + endpointId);
-
-            mResultTextView.setText("CONNECTING..");
-            Nearby.Connections.acceptConnection(
-                    DixitApplication.getGoogleApiClient(), endpointId, mPayloadCallback);
-
-        }
-
-        @Override
-        public void onConnectionResult(String endpointId, ConnectionResolution result) {
-            Log.d("FERNO", "onConnectionResult");
-            switch (result.getStatus().getStatusCode()) {
-                case ConnectionsStatusCodes.STATUS_OK:
-                    // We're connected! Can now start sending and receiving data.
-                    mResultTextView.setText("CONNECTED!!!");
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            Intent i = new Intent(FindOpenGamesActivity.this, PlayersActivity.class);
-                            startActivity(i);
-                            finish();
-                        }
-                    }, 1000);
-                    break;
-                case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
-                    // The connection was rejected by one or both sides.
-                    mResultTextView.setText("REJECTED!!!");
-                    break;
-                default:
-                    mResultTextView.setText("WHAT? CODE: " + result.getStatus().getStatusCode());
-            }
-        }
-
-        @Override
-        public void onDisconnected(String s) {
-            Log.d("FERNO", "onDisconnected");
-
-        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.find_games_activity);
         mResultTextView = (TextView) findViewById(R.id.result_text);
-        if(DixitApplication.getGoogleApiClient() == null) {
+        if (DixitApplication.getGoogleApiClient() == null) {
             DixitApplication.initGoogleApiClient();
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -175,7 +165,7 @@ public class FindOpenGamesActivity extends BaseActivity implements
                                 });
             }
         });
-        mSwipeRefreshLayout = (SwipeRefreshLayout)findViewById(R.id.swiperefresh);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -267,6 +257,16 @@ public class FindOpenGamesActivity extends BaseActivity implements
     }
 
     @Override
+    public void onPayloadReceived(String s, Payload payload) {
+
+    }
+
+    @Override
+    public void onPayloadTransferUpdate(String s, PayloadTransferUpdate payloadTransferUpdate) {
+
+    }
+
+    @Override
     protected void onDestroy() {
         Log.e("FERNO", "ON DESTROY DISCOVERY");
         super.onDestroy();
@@ -277,7 +277,7 @@ public class FindOpenGamesActivity extends BaseActivity implements
         StringBuilder randomStringBuilder = new StringBuilder();
         int randomLength = generator.nextInt(10);
         char tempChar;
-        for (int i = 0; i < randomLength; i++){
+        for (int i = 0; i < randomLength; i++) {
             tempChar = (char) (generator.nextInt(96) + 32);
             randomStringBuilder.append(tempChar);
         }

@@ -1,6 +1,7 @@
 package com.ludic.nearbysolution.dixitdemoapp;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -13,17 +14,16 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
-import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.Connections;
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes;
@@ -62,78 +62,64 @@ public class StartNewGameActivity extends BaseActivity implements DixitApplicati
     private SimpleAdapter discovererAdapter;
     private SimpleAdapter playersAdapter;
 
+    @Override
+    public void onConnectionInitiated(String discovererId, ConnectionInfo connectionInfo) {
+        Log.d("FERNO", "onConnectionInitiated discovererId: " + discovererId);
 
-    private PayloadCallback mPayloadCallback = new PayloadCallback() {
-        @Override
-        public void onPayloadReceived(String s, Payload payload) {
+        mResultTextView.setText("CONNECTING..");
 
-        }
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put("id", discovererId);
+        map.put("name", connectionInfo.getEndpointName());
 
-        @Override
-        public void onPayloadTransferUpdate(String s, PayloadTransferUpdate payloadTransferUpdate) {
-
-        }
-    };
-
-        @Override
-        public void onConnectionInitiated(String discovererId, ConnectionInfo connectionInfo) {
-            Log.d("FERNO", "onConnectionInitiated discovererId: " + discovererId);
-
-            mResultTextView.setText("CONNECTING..");
-
-            HashMap<String, String> map = new HashMap<String, String>();
-            map.put("id", discovererId);
-            map.put("name", connectionInfo.getEndpointName());
-
-            discovererListItems.add(map);
-            discovererAdapter.notifyDataSetChanged();
+        discovererListItems.add(map);
+        discovererAdapter.notifyDataSetChanged();
 
 //
 //            Nearby.Connections.acceptConnection(
 //                    mGoogleApiClient, endpointId, mPayloadCallback);
 
-        }
+    }
 
-        @Override
-        public void onConnectionResult(String discovererId, ConnectionResolution result) {
-            Log.d("FERNO", "onConnectionResult");
-            switch (result.getStatus().getStatusCode()) {
-                case ConnectionsStatusCodes.STATUS_OK:
-                    // We're connected! Can now start sending and receiving data.
-                    HashMap row = null;
-                    mResultTextView.setText("CONNECTED!!!");
-                    for(int i = 0; i < discovererListItems.size(); i++){
-                        row = discovererListItems.get(i);
-                        if(row.get("id") == discovererId){
-                           break;
-                        }
+    @Override
+    public void onConnectionResult(String discovererId, ConnectionResolution result) {
+        switch (result.getStatus().getStatusCode()) {
+            case ConnectionsStatusCodes.STATUS_OK:
+                // We're connected! Can now start sending and receiving data.
+                HashMap row = null;
+                mResultTextView.setText("CONNECTED!!!");
+                for (int i = 0; i < discovererListItems.size(); i++) {
+                    row = discovererListItems.get(i);
+                    if (row.get("id") == discovererId) {
+                        break;
                     }
-                    if(row != null){
-                        playersListItems.add(row);
-                        playersAdapter.notifyDataSetChanged();
-                        discovererListItems.remove(row);
-                        discovererAdapter.notifyDataSetChanged();
-                    }
-                    break;
-                case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
-                    // The connection was rejected by one or both sides.
-                    mResultTextView.setText("REJECTED!!!");
-                    break;
-            }
+                }
+                if (row != null) {
+                    playersListItems.add(row);
+                    playersAdapter.notifyDataSetChanged();
+                    discovererListItems.remove(row);
+                    discovererAdapter.notifyDataSetChanged();
+                }
+                break;
+            case ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED:
+                // The connection was rejected by one or both sides.
+                mResultTextView.setText("REJECTED!!!");
+                break;
         }
+    }
 
-        @Override
-        public void onDisconnected(String s) {
-            Log.d("FERNO", "onDisconnected");
+    @Override
+    public void onDisconnected(String s) {
+        Log.d("FERNO", "onDisconnected");
 
-        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.game_instance_activity);
+        setContentView(R.layout.game_room_activity);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        TextView hubName = (TextView)findViewById(R.id.hub_name);
+        TextView hubName = (TextView) findViewById(R.id.hub_name);
         hubName.setText(hubName.getText().toString() + getSharedPreferences(USER_DATA, 0).getString(USERNAME, "") + " - ");// + id
         mResultTextView = (TextView) findViewById(R.id.result_text);
         if (DixitApplication.getGoogleApiClient() == null) {
@@ -167,7 +153,7 @@ public class StartNewGameActivity extends BaseActivity implements DixitApplicati
 
 
                 Nearby.Connections.acceptConnection(
-                        DixitApplication.getGoogleApiClient(), discovererId, mPayloadCallback);
+                        DixitApplication.getGoogleApiClient(), discovererId, DixitApplication.getPayloadCallback());
 
             }
         });
@@ -187,7 +173,7 @@ public class StartNewGameActivity extends BaseActivity implements DixitApplicati
             }
         });
 
-        SwipeRefreshLayout swiperefreshPlayer = (SwipeRefreshLayout)findViewById(R.id.swiperefresh_player);
+        SwipeRefreshLayout swiperefreshPlayer = (SwipeRefreshLayout) findViewById(R.id.swiperefresh_player);
         swiperefreshPlayer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -204,8 +190,19 @@ public class StartNewGameActivity extends BaseActivity implements DixitApplicati
         mPlayersListView.setAdapter(playersAdapter);
 
         DixitApplication.setDixitListener(this);
-    }
 
+        Button start = (Button) findViewById(R.id.start);
+        start.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                DixitApplication.saveConnectedUsers(playersListItems);
+
+                Intent i = new Intent(StartNewGameActivity.this, GameInstanceActivity.class);
+                startActivity(i);
+            }
+        });
+    }
 
 
     @Override
@@ -265,6 +262,16 @@ public class StartNewGameActivity extends BaseActivity implements DixitApplicati
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         Log.d("FERNO", "onConnectionFailed");
+
+    }
+
+    @Override
+    public void onPayloadReceived(String s, Payload payload) {
+
+    }
+
+    @Override
+    public void onPayloadTransferUpdate(String s, PayloadTransferUpdate payloadTransferUpdate) {
 
     }
 
