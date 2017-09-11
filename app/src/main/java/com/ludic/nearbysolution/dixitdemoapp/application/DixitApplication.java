@@ -1,4 +1,4 @@
-package com.ludic.nearbysolution.dixitdemoapp;
+package com.ludic.nearbysolution.dixitdemoapp.application;
 
 import android.app.Application;
 import android.content.Context;
@@ -6,28 +6,24 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
-import android.view.View;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.nearby.Nearby;
-import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
-import com.google.android.gms.nearby.connection.Connections;
-import com.google.android.gms.nearby.connection.ConnectionsStatusCodes;
 import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
-import com.google.android.gms.nearby.connection.Strategy;
+import com.ludic.nearbysolution.dixitdemoapp.interfaces.DixitAppListener;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USERNAME;
-import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USER_DATA;
+import static com.ludic.nearbysolution.dixitdemoapp.activities.PlayersDataActivity.USERNAME;
+import static com.ludic.nearbysolution.dixitdemoapp.activities.PlayersDataActivity.USER_DATA;
 
 /**
  * Created by luca.fernandez on 28/08/2017.
@@ -39,6 +35,7 @@ public class DixitApplication extends Application {
     private static DixitAppListener mListener;
     private boolean type = false;
     private static List<HashMap<String, String>> playersList;
+    private static List<HashMap<String, String>> disconnectedPlayersList;
     private static final String TAG = "DixitApplication";
 
     private enum ConnectionType {
@@ -95,6 +92,20 @@ public class DixitApplication extends Application {
         @Override
         public void onDisconnected(String discovererId) {
             Log.w(TAG, "onDisconnected, discoverer with id: " + discovererId + " disconnected");
+            if(playersList.size() > 0) {
+                for (int i = 0; i < playersList.size(); i++) {
+                    String id = playersList.get(i).get("id");
+                    String name = playersList.get(i).get("name");
+                    if (id.equals(discovererId)) {
+                        HashMap user = new HashMap();
+                        user.put("id", id);
+                        user.put("name", name);
+
+                        disconnectedPlayersList.add(user);
+                        playersList.remove(i);
+                    }
+                }
+            }
             if(mListener != null){
                 mListener.onDisconnected(discovererId);
             }
@@ -125,9 +136,10 @@ public class DixitApplication extends Application {
         } else if (getSharedPreferences(USER_DATA, 0).getString(USERNAME, "").isEmpty()) {
             //do nothing
         }
+        disconnectedPlayersList = new ArrayList<>();
     }
 
-    protected static void initGoogleApiClient() {
+    public static void initGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(context)
                 .addConnectionCallbacks(connectionCallbacks)
                 .addOnConnectionFailedListener(connectionFailedListener)
@@ -136,15 +148,15 @@ public class DixitApplication extends Application {
                 .build();
     }
 
-    protected static GoogleApiClient getGoogleApiClient() {
+    public static GoogleApiClient getGoogleApiClient() {
         return mGoogleApiClient;
     }
 
-    protected static ConnectionLifecycleCallback getConnectionLifecycleCallback(){
+    public static ConnectionLifecycleCallback getConnectionLifecycleCallback(){
         return mConnectionLifecycleCallback;
     }
 
-    protected static PayloadCallback getPayloadCallback(){
+    public static PayloadCallback getPayloadCallback(){
         return mPayloadCallback;
     }
 
@@ -157,7 +169,7 @@ public class DixitApplication extends Application {
         }
     }
 
-    protected static void setDixitListener(DixitAppListener listener){
+    public static void setDixitListener(DixitAppListener listener){
         mListener = listener;
     }
 
@@ -171,26 +183,10 @@ public class DixitApplication extends Application {
         return playersList;
     }
 
-
-    public interface DixitAppListener {
-
-        //TODO: suddividere in pù listener
-
-        void onConnectionInitiated(String discovererId, ConnectionInfo connectionInfo);
-
-        void onConnectionResult(String discovererId, ConnectionResolution result);
-
-        void onDisconnected(String discovererId);
-
-        void onConnected(@Nullable Bundle bundle);
-
-        void onConnectionSuspended(int i);
-
-        void onConnectionFailed(@NonNull ConnectionResult connectionResult);
-
-        void onPayloadReceived(String s, Payload payload);
-
-        void onPayloadTransferUpdate(String s, PayloadTransferUpdate payloadTransferUpdate);
+    public static List<HashMap<String, String>> getDisconnectedUsers() {
+        return disconnectedPlayersList;
     }
+
+
 
 }

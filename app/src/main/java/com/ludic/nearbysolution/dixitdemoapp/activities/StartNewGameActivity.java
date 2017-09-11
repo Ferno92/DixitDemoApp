@@ -1,4 +1,4 @@
-package com.ludic.nearbysolution.dixitdemoapp;
+package com.ludic.nearbysolution.dixitdemoapp.activities;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -28,22 +28,21 @@ import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.Connections;
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes;
 import com.google.android.gms.nearby.connection.Payload;
-import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 import com.google.android.gms.nearby.connection.Strategy;
+import com.ludic.nearbysolution.dixitdemoapp.R;
+import com.ludic.nearbysolution.dixitdemoapp.application.DixitApplication;
+import com.ludic.nearbysolution.dixitdemoapp.interfaces.DixitAppListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USERNAME;
-import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USER_DATA;
-
 /**
  * Created by luca.fernandez on 24/08/2017.
  */
 
-public class StartNewGameActivity extends BaseActivity implements DixitApplication.DixitAppListener {
+public class StartNewGameActivity extends BaseActivity implements DixitAppListener {
 
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private TextView mResultTextView;
@@ -109,8 +108,16 @@ public class StartNewGameActivity extends BaseActivity implements DixitApplicati
     }
 
     @Override
-    public void onDisconnected(String s) {
+    public void onDisconnected(String deviceId) {
         Log.d("FERNO", "onDisconnected");
+
+        for(int i = 0; i < playersListItems.size(); i++){
+            if(playersListItems.get(i).get("id").equals(deviceId)){
+                Log.d("FERNO", "disconnected item: " + playersListItems.get(i).get("name"));
+                playersListItems.remove(i);
+                playersAdapter.notifyDataSetChanged();
+            }
+        }
 
     }
 
@@ -120,7 +127,7 @@ public class StartNewGameActivity extends BaseActivity implements DixitApplicati
         setContentView(R.layout.game_room_activity);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         TextView hubName = (TextView) findViewById(R.id.hub_name);
-        hubName.setText(hubName.getText().toString() + getSharedPreferences(USER_DATA, 0).getString(USERNAME, "") + " - ");// + id
+        hubName.setText(hubName.getText().toString() + getSharedPreferences(PlayersDataActivity.USER_DATA, 0).getString(PlayersDataActivity.USERNAME, "") + " - ");// + id
         mResultTextView = (TextView) findViewById(R.id.result_text);
         if (DixitApplication.getGoogleApiClient() == null) {
             DixitApplication.initGoogleApiClient();
@@ -231,7 +238,7 @@ public class StartNewGameActivity extends BaseActivity implements DixitApplicati
     private void startAdvertising() {
         Nearby.Connections.startAdvertising(
                 DixitApplication.getGoogleApiClient(),
-                getSharedPreferences(USER_DATA, 0).getString(USERNAME, ""), //getUserNickname(),
+                getSharedPreferences(PlayersDataActivity.USER_DATA, 0).getString(PlayersDataActivity.USERNAME, ""), //getUserNickname(),
                 "com.ludic.nearbysolution.dixitdemoapp",//SERVICE_ID,
                 DixitApplication.getConnectionLifecycleCallback(),
                 new AdvertisingOptions(Strategy.P2P_STAR))

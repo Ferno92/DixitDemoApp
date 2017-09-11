@@ -1,13 +1,10 @@
-package com.ludic.nearbysolution.dixitdemoapp;
+package com.ludic.nearbysolution.dixitdemoapp.activities;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
 
-import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USERNAME;
-import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USER_DATA;
+import com.ludic.nearbysolution.dixitdemoapp.R;
 
 /**
  * Created by luca.fernandez on 25/08/2017.
@@ -23,10 +20,10 @@ public class SplashActivity extends BaseActivity {
             @Override
             public void run() {
 
-                if(getSharedPreferences(USER_DATA, 0) == null){
+                if(getSharedPreferences(PlayersDataActivity.USER_DATA, 0) == null){
                     askPlayersDataActivity();
                 }else{
-                    if(getSharedPreferences(USER_DATA, 0).getString(USERNAME, "").isEmpty()){
+                    if(getSharedPreferences(PlayersDataActivity.USER_DATA, 0).getString(PlayersDataActivity.USERNAME, "").isEmpty()){
                         askPlayersDataActivity();
                     }else{
                         startHomeActivity();

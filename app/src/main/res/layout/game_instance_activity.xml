@@ -1,13 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3">
+            <!-- game table-->
 
-    <Button
-        android:id="@+id/send_payload"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="Send payload"/>
+
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+            <TextView
+                android:id="@+id/players_list_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Players List"
+                android:gravity="center"
+                style="@style/text_25_roboto_regular"/>
+            <ListView
+                android:id="@+id/players_list"
+                android:layout_below="@+id/players_list_title"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"></ListView>
+            <!-- TODO MAP -->
+        </RelativeLayout>
+    </LinearLayout>
+
 
 </RelativeLayout>

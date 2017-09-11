@@ -1,4 +1,4 @@
-package com.ludic.nearbysolution.dixitdemoapp;
+package com.ludic.nearbysolution.dixitdemoapp.activities;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;

@@ -15,9 +15,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"
-        android:name=".DixitApplication">
+        android:name=".application.DixitApplication">
         <activity
-            android:name=".SplashActivity"
+            android:name=".activities.SplashActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,24 +25,24 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen">
         </activity>
-        <activity android:name=".StartNewGameActivity"
+        <activity android:name=".activities.StartNewGameActivity"
             android:label="Start New Game"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"></activity>
-        <activity android:name=".FindOpenGamesActivity"
+        <activity android:name=".activities.FindOpenGamesActivity"
             android:label="Find Open Game"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"></activity>
-        <activity android:name=".PlayersDataActivity"
+        <activity android:name=".activities.PlayersDataActivity"
             android:label="Players Data"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"></activity>
-        <activity android:name=".PlayersActivity"
+        <activity android:name=".activities.PlayersActivity"
             android:label="Players Page"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"></activity>
-        <activity android:name=".GameInstanceActivity"
+        <activity android:name=".activities.GameInstanceActivity"
             android:label="Game instance"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"></activity>
 

@@ -1,4 +1,4 @@
-package com.ludic.nearbysolution.dixitdemoapp;
+package com.ludic.nearbysolution.dixitdemoapp.activities;
 
 import android.Manifest;
 import android.content.DialogInterface;
@@ -20,36 +20,33 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
-import com.google.android.gms.nearby.connection.ConnectionLifecycleCallback;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
 import com.google.android.gms.nearby.connection.ConnectionsStatusCodes;
 import com.google.android.gms.nearby.connection.DiscoveredEndpointInfo;
 import com.google.android.gms.nearby.connection.DiscoveryOptions;
 import com.google.android.gms.nearby.connection.EndpointDiscoveryCallback;
 import com.google.android.gms.nearby.connection.Payload;
-import com.google.android.gms.nearby.connection.PayloadCallback;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 import com.google.android.gms.nearby.connection.Strategy;
+import com.ludic.nearbysolution.dixitdemoapp.R;
+import com.ludic.nearbysolution.dixitdemoapp.application.DixitApplication;
+import com.ludic.nearbysolution.dixitdemoapp.interfaces.DixitAppListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USERNAME;
-import static com.ludic.nearbysolution.dixitdemoapp.PlayersDataActivity.USER_DATA;
-
 /**
  * Created by luca.fernandez on 24/08/2017.
  */
 
 public class FindOpenGamesActivity extends BaseActivity implements
-        DixitApplication.DixitAppListener {
+        DixitAppListener {
 
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private TextView mResultTextView;
@@ -141,7 +138,7 @@ public class FindOpenGamesActivity extends BaseActivity implements
                 HashMap map = listItems.get(position);
                 String endpointId = map.get("id").toString();
 
-                String name = getSharedPreferences(USER_DATA, 0).getString(USERNAME, "NO-NAME");
+                String name = getSharedPreferences(PlayersDataActivity.USER_DATA, 0).getString(PlayersDataActivity.USERNAME, "NO-NAME");
                 Nearby.Connections.requestConnection(
                         DixitApplication.getGoogleApiClient(),
                         name,
