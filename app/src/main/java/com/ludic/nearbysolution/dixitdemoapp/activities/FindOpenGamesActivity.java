@@ -156,7 +156,9 @@ public class FindOpenGamesActivity extends BaseActivity implements
                                         } else {
                                             Log.d("FERNO", "Nearby Connections failed to request the connection, status: " + status.getStatusCode());
                                             mResultTextView.setText("ERROR: " + status.getStatusCode());
-                                            // Nearby Connections failed to request the connection. repeat?
+                                            //STATUS_ENDPOINT_IO_ERROR ==> 8012
+                                            //An attempt to read from/write to a connected remote endpoint failed.
+                                            // If this occurs repeatedly, consider invoking disconnectFromEndpoint(GoogleApiClient, String).
                                         }
                                     }
                                 });
@@ -209,6 +211,7 @@ public class FindOpenGamesActivity extends BaseActivity implements
                 public void onEndpointLost(String endpointId) {
                     // A previously discovered endpoint has gone away.
                     Log.d("FERNO", "A previously discovered endpoint has gone away.");
+                    //TODO: remove endpoint from list
                 }
             };
 

@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
+import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
@@ -19,6 +20,7 @@ import com.google.android.gms.nearby.connection.Connections;
 import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
 import com.google.android.gms.nearby.connection.Strategy;
+import com.ludic.nearbysolution.dixitdemoapp.ImageAdapter;
 import com.ludic.nearbysolution.dixitdemoapp.R;
 import com.ludic.nearbysolution.dixitdemoapp.application.DixitApplication;
 import com.ludic.nearbysolution.dixitdemoapp.interfaces.DixitAppListener;
@@ -41,7 +43,6 @@ public class GameInstanceActivity extends BaseActivity implements DixitAppListen
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.game_instance_activity);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         DixitApplication.setDixitListener(this);
         for (int i = 0; i < DixitApplication.getConnectedUsers().size(); i++) {
             playersIdList.add(DixitApplication.getConnectedUsers().get(i).get("id"));
@@ -65,6 +66,9 @@ public class GameInstanceActivity extends BaseActivity implements DixitAppListen
         mPlayersListView = (ListView) findViewById(R.id.players_list);
         mPlayersListView.setAdapter(playersAdapter);
 
+        //gridview
+        GridView gridview = (GridView) findViewById(R.id.gridview);
+        gridview.setAdapter(new ImageAdapter(this));
     }
 
     @Override

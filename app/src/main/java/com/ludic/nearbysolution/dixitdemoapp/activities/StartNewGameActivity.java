@@ -125,7 +125,6 @@ public class StartNewGameActivity extends BaseActivity implements DixitAppListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.game_room_activity);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         TextView hubName = (TextView) findViewById(R.id.hub_name);
         hubName.setText(hubName.getText().toString() + getSharedPreferences(PlayersDataActivity.USER_DATA, 0).getString(PlayersDataActivity.USERNAME, "") + " - ");// + id
         mResultTextView = (TextView) findViewById(R.id.result_text);
@@ -203,10 +202,12 @@ public class StartNewGameActivity extends BaseActivity implements DixitAppListen
             @Override
             public void onClick(View v) {
 
-                DixitApplication.saveConnectedUsers(playersListItems);
+                if(playersListItems != null && playersListItems.size() > 0) {
+                    DixitApplication.saveConnectedUsers(playersListItems);
 
-                Intent i = new Intent(StartNewGameActivity.this, GameInstanceActivity.class);
-                startActivity(i);
+                    Intent i = new Intent(StartNewGameActivity.this, GameInstanceActivity.class);
+                    startActivity(i);
+                }
             }
         });
     }

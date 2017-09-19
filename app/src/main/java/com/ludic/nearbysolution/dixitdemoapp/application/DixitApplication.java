@@ -3,6 +3,7 @@ package com.ludic.nearbysolution.dixitdemoapp.application;
 import android.app.Application;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -66,6 +67,13 @@ public class DixitApplication extends Application {
         @Override
         public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
             Log.w(TAG, "onConnectionFailed");
+            //default action
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    initGoogleApiClient();
+                }
+            }, 2000);
 
             mListener.onConnectionFailed(connectionResult);
         }
@@ -92,7 +100,7 @@ public class DixitApplication extends Application {
         @Override
         public void onDisconnected(String discovererId) {
             Log.w(TAG, "onDisconnected, discoverer with id: " + discovererId + " disconnected");
-            if(playersList.size() > 0) {
+            if(playersList != null && playersList.size() > 0) {
                 for (int i = 0; i < playersList.size(); i++) {
                     String id = playersList.get(i).get("id");
                     String name = playersList.get(i).get("name");

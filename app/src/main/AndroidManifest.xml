@@ -32,6 +32,7 @@
         </activity>
         <activity android:name=".activities.StartNewGameActivity"
             android:label="Start New Game"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"></activity>
         <activity android:name=".activities.FindOpenGamesActivity"
             android:label="Find Open Game"
@@ -44,6 +45,7 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"></activity>
         <activity android:name=".activities.GameInstanceActivity"
             android:label="Game instance"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"></activity>
 
 
