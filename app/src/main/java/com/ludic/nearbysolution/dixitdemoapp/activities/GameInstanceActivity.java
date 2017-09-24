@@ -1,26 +1,23 @@
 package com.ludic.nearbysolution.dixitdemoapp.activities;
 
-import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
 import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.nearby.Nearby;
-import com.google.android.gms.nearby.connection.AdvertisingOptions;
 import com.google.android.gms.nearby.connection.ConnectionInfo;
 import com.google.android.gms.nearby.connection.ConnectionResolution;
-import com.google.android.gms.nearby.connection.Connections;
 import com.google.android.gms.nearby.connection.Payload;
 import com.google.android.gms.nearby.connection.PayloadTransferUpdate;
-import com.google.android.gms.nearby.connection.Strategy;
-import com.ludic.nearbysolution.dixitdemoapp.ImageAdapter;
+import com.ludic.nearbysolution.dixitdemoapp.adapters.ImageAdapter;
 import com.ludic.nearbysolution.dixitdemoapp.R;
 import com.ludic.nearbysolution.dixitdemoapp.application.DixitApplication;
 import com.ludic.nearbysolution.dixitdemoapp.interfaces.DixitAppListener;
@@ -38,6 +35,10 @@ public class GameInstanceActivity extends BaseActivity implements DixitAppListen
     private List<String> playersIdList = new ArrayList<>();
     private ListView mPlayersListView;
     private SimpleAdapter playersAdapter;
+    private ImageView mDeckImage;
+    private LinearLayout mDeckLayout;
+    private GridView mGridView;
+    private boolean mCardSent = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -48,16 +49,6 @@ public class GameInstanceActivity extends BaseActivity implements DixitAppListen
             playersIdList.add(DixitApplication.getConnectedUsers().get(i).get("id"));
         }
 
-        String text = "Hi, players! Welcome to Dixit App";
-        byte[] bytes = new byte[0];
-        try {
-            bytes = text.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            Log.e("FERNO", "Exception: " + e.getMessage());
-        }
-        Nearby.Connections.sendPayload(DixitApplication.getGoogleApiClient(), playersIdList, Payload.fromBytes(bytes));
-
         // Create the item mapping
         String[] from = new String[]{"id", "name"};
         int[] to = new int[]{R.id.endpoint_id, R.id.endpoint_name};
@@ -66,9 +57,36 @@ public class GameInstanceActivity extends BaseActivity implements DixitAppListen
         mPlayersListView = (ListView) findViewById(R.id.players_list);
         mPlayersListView.setAdapter(playersAdapter);
 
+        mDeckLayout = (LinearLayout)findViewById(R.id.deck_layout);
+
         //gridview
-        GridView gridview = (GridView) findViewById(R.id.gridview);
-        gridview.setAdapter(new ImageAdapter(this));
+        mGridView = (GridView) findViewById(R.id.gridview);
+        mGridView.setAdapter(new ImageAdapter(this));
+
+        //deck
+        mDeckImage = (ImageView)findViewById(R.id.deck);
+        mDeckImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if(!mCardSent) {
+                    mCardSent = true;
+                    String text = "Hi, players! Welcome to Dixit App";
+                    byte[] bytes = new byte[0];
+                    try {
+                        bytes = text.getBytes("UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                        Log.e("FERNO", "Exception: " + e.getMessage());
+                    }
+                    Nearby.Connections.sendPayload(DixitApplication.getGoogleApiClient(), playersIdList, Payload.fromBytes(bytes));
+                    mDeckLayout.setVisibility(View.GONE);
+                    mGridView.setVisibility(View.VISIBLE);
+
+
+                }
+            }
+        });
     }
 
     @Override

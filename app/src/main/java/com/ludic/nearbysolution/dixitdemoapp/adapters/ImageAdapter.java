@@ -1,4 +1,4 @@
-package com.ludic.nearbysolution.dixitdemoapp;
+package com.ludic.nearbysolution.dixitdemoapp.adapters;
 
 import android.content.Context;
 import android.util.DisplayMetrics;
@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+
+import com.ludic.nearbysolution.dixitdemoapp.R;
 
 /**
  * Created by lucas on 19/09/2017.

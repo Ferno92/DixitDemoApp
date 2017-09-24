@@ -13,14 +13,25 @@
         style="@style/text_25_roboto_regular"
         tools:visibility="gone"/>
 
-    <TextView
+    <RelativeLayout
+        android:id="@+id/card_pager_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Player's cards"
-        style="@style/text_25_roboto_regular"
-        android:gravity="center_horizontal"
+        android:layout_height="match_parent"
         android:visibility="gone"
-        tools:visibility="visible"/>
+        tools:visibility="visible">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Player's cards"
+            style="@style/text_25_roboto_regular"
+            android:gravity="center_horizontal"/>
+        <android.support.v4.view.ViewPager
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/card_pager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </RelativeLayout>
 
 
 

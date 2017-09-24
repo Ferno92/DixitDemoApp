@@ -21,7 +21,33 @@
                 android:verticalSpacing="10dp"
                 android:horizontalSpacing="10dp"
                 android:stretchMode="columnWidth"
-                android:gravity="center"></GridView>
+                android:gravity="center"
+                android:visibility="gone"></GridView>
+
+            <!-- mazzo -->
+            <LinearLayout
+                android:id="@+id/deck_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Tap the deck to start.."
+                    android:gravity="center_horizontal"
+                    style="@style/text_25_roboto_regular"
+                    />
+
+                <ImageView
+                    android:id="@+id/deck"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:src="@drawable/deck_selection"
+                    android:layout_margin="40dp"/>
+
+            </LinearLayout>
 
         </RelativeLayout>
         <RelativeLayout
